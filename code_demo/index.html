@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Dynamically Add or Remove Table Row Using VueJS</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>  
+</head>
+
+<body>
+    <div id="app">
+        <table class="table ml-2">
+            <thead>
+                <th class=""></th>
+                <th class="text-center">ID</th>
+                <th class="text-center">Name</th>
+                <th class="text-center">Price</th>
+                <th class="text-center">Qty</th>
+                <th class="text-center">Total</th>
+            </thead>
+            <tbody>
+                <tr  v-for="(invoice_product, index) in this.invoice_products" :key="index">        
+                    <td class="ml-2" style="cursor:pointer;">
+                        <i class="fa fa-trash fa-2x" style="color: red;" aria-hidden="true" @click="deleteProduct(invoice_product,index)" ></i>
+                    </td>
+                    <td>
+                        <input class="form-control" type="text" v-model="invoice_product.product_no" />
+                    </td>
+                    <td>
+                        <input class="form-control" type="text" v-model="invoice_product.product_name" />
+                    </td>
+                    <td>
+                        <input class="form-control text-right" type="number" min="0" step=".01" v-model="invoice_product.product_price" @change="calculateLineTotal(invoice_product)"
+                        />
+                    </td>
+                    <td>
+                        <input class="form-control text-right" type="number" min="0" step=".01" v-model="invoice_product.product_qty" @change="calculateLineTotal(invoice_product)"
+                        />
+                    </td>
+                    <td>
+                        <input readonly class="form-control text-right" type="number" min="0" step=".01" v-model="invoice_product.line_total" />
+                    </td>
+        
+                </tr>
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="5" class="text-right">Sub Total</td>
+                    <td class="text-right">{{invoice_subtotal}}</td>
+                </tr>
+                <tr>
+                    <td colspan="5" class="text-right">Tax</td>
+                    <td class="text-right">{{invoice_tax}}</td>
+                </tr>
+                <tr>
+                    <td colspan="5" class="text-right">Total</td>
+                    <td class="text-right">{{invoice_total}}</td>
+                </tr>
+            </tfoot>
+        </table>    
+        <button type='button' class="btn btn-info ml-3" @click="createProduct">
+            <i class="fa fa-plus-circle"></i>
+            Add
+        </button>
+    </div>     
+    <script>
+        var app = new Vue({
+           el: '#app',
+           data() {
+               return {
+                invoice_subtotal: 0,
+                invoice_total: 0,
+                invoice_tax: 5,
+                invoice_products: [{
+                product_no: '',
+                product_name: '',
+                product_price: '',
+                product_qty: '',
+                line_total: 0
+               }] 
+            }
+           },
+
+           methods: {
+            createProduct() {
+                this.invoice_products.push({
+                    product_no: '',
+                    product_name: '',
+                    product_price: '',
+                    product_qty: '',
+                    line_total: 0
+                })            
+            },
+            deleteProduct(invoice_product,index){
+                var idx= this.invoice_products.indexOf(invoice_product);
+                console.log(idx,index);
+                if(idx > 0){
+                this.invoice_products.splice(idx, 1);
+                }
+                this.calculateTotal()
+            },
+            calculateLineTotal(invoice_product){
+                var lineTotal = parseFloat(invoice_product.product_price)* parseFloat(invoice_product.product_qty);
+                if(!isNaN(lineTotal)){
+                    invoice_product.line_total = lineTotal.toFixed(2);
+                }
+                this.calculateTotal();
+            },
+            calculateTotal(){
+                var subtotal, total;
+                subtotal = this.invoice_products.reduce((sum,product)=>{
+                    var lineTotal = parseFloat(product.line_total);
+                    if(!isNaN(lineTotal)){
+                        return sum + lineTotal
+                    }
+ 
+                }, 0);
+                this.invoice_subtotal= subtotal.toFixed(2);
+                total = (subtotal*(this.invoice_tax/100))+ subtotal;
+                total = parseFloat(total);
+                if(!isNaN(total)){
+                    this.invoice_total = total.toFixed(2);
+                }
+                else {
+                    this.invoice_total = 0.00;
+                }        
+            }                     
+           },
+
+           mounted () {
+               
+           },
+       })
+        
+    </script>    
+</body>
+
+
+</html>
